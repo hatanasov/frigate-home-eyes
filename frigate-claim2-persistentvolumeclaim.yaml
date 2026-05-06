@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  finalizers:
+  - kubernetes.io/pv-protection
+  name: frigate-storage-volume
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 276Gi
+  hostPath:
+    path: "/media/frigate-data" # <------- depending on your hardware (HDD size etc.)
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-path
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    io.k3s.service: frigate-claim-storage
+  name: frigate-claim-storage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 276Gi
+  volumeName: frigate-storage-volume
+  storageClassName: local-path
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    io.k3s.service: frigate-claim-config
+  name: frigate-claim-config
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Mi

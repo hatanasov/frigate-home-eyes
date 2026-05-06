@@ -1,0 +1,12 @@
+apiVersion: v1
+data:
+  password.txt: |
+    <mqtt_user same as FN_FRIGATE__MQTT__USERNAME>:<mqtt_password same as FN_FRIGATE__MQTT__PASSWORD>
+kind: ConfigMap
+metadata:
+  annotations:
+    use-subpath: "true"
+  labels:
+    io.kompose.service: mqtt
+  name: mqtt-cm1
+# passwords are generated/encrypted with "mosquitto_passwd" tool.

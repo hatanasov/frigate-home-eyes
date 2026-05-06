@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.k3s.service: frigate
+  name: frigate
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.k3s.service: frigate
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        io.k3s.service: frigate
+    spec:
+      initContainers:
+      - name: config-loader
+        image: busybox
+        imagePullPolicy: IfNotPresent
+        command: ['sh', '-c','cp /tmp/config/config.yaml /config/config.yaml']
+        volumeMounts:
+          - mountPath: /tmp/config
+            name: frigate-cm0
+          - mountPath: /config
+            name: frigate-config
+            readOnly: false
+      containers:
+        - image: ghcr.io/blakeblackshear/frigate:0.16.0
+          name: frigate
+          securityContext:
+            privileged: true
+          ports:
+            - containerPort: 5000
+              protocol: TCP
+            - containerPort: 1935
+              protocol: TCP
+            - containerPort: 8971
+              protocol: TCP
+            - containerPort: 8554
+              protocol: TCP
+          resources:
+            limits:
+              cpu: "2"
+              memory: "4Gi"
+          volumeMounts:
+            - mountPath: /tmp/cache
+              name: tmpfs
+              readOnly: false
+            - mountPath: /config
+              name: frigate-config
+              readOnly: false
+            - mountPath: /media/frigate
+              name: frigate-storage
+              readOnly: false
+            - mountPath: /dev/dri
+              name: dri
+              readOnly: false
+            - name: dshm
+              mountPath: /dev/shm
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: tmpfs
+          emptyDir: 
+            medium: Memory
+            sizeLimit: 1Gi
+        - name: config
+          emptyDir: 
+            sizeLimit: 200Mi
+        - configMap:
+            name: frigate-cm0
+          name: frigate-cm0
+        - name: frigate-storage
+          persistentVolumeClaim:
+            claimName: frigate-claim-storage
+        - name: frigate-config
+          persistentVolumeClaim:
+            claimName:  frigate-claim-config
+        - name: dri
+          hostPath:
+            path: /dev/dri
+            type: Directory
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: "512Mi"  # <--- Equivalent to shm_size: 512mb

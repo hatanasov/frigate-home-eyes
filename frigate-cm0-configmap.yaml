@@ -1,0 +1,134 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    io.k3s.service: frigate
+  name: frigate-cm0
+data:
+  config.yaml: |-
+    mqtt:
+      # Optional: Enable mqtt server (default: shown below)
+      enabled: True
+      # Required: host name
+      host: mqtt
+      #host mqtt.default.svc.cluster.local
+      # Optional: port (default: shown below)
+      port: 1883
+      # Optional: topic prefix (default: shown below)
+      # NOTE: must be unique if you are running multiple instances
+      #topic_prefix: frigate
+      # Optional: client id (default: shown below)
+      # NOTE: must be unique if you are running multiple instances
+      #client_id: frigate_petarch_han_4
+      # Optional: user
+      # NOTE: MQTT user can be specified with an environment variable or docker secrets that must begin with 'FRIGATE_'.
+      #       e.g. user: '{FRIGATE_MQTT_USER}'
+      user: <username> # <------- same as FN_FRIGATE__MQTT__USERNAME
+      password: <password> # <------- same as FN_FRIGATE__MQTT__PASSWORD
+      # Optional: password
+      # NOTE: MQTT password can be specified with an environment variable or docker secrets that must begin with 'FRIGATE_'.
+      #       e.g. password: '{FRIGATE_MQTT_PASSWORD}'
+      # Optional: tls_ca_certs for enabling TLS using self-signed certs (default: None)
+      # tls_ca_certs: /path/to/ca.crt
+      # Optional: tls_client_cert and tls_client key in order to use self-signed client
+      # certificates (default: None)
+      # NOTE: certificate must not be password-protected
+      #       do not set user and password when using a client certificate
+      # tls_client_cert: /path/to/client.crt
+      # tls_client_key: /path/to/client.key
+      # Optional: tls_insecure (true/false) for enabling TLS verification of
+      # the server hostname in the server certificate (default: None)
+      #tls_insecure: false
+      # Optional: interval in seconds for publishing stats (default: shown below)
+      stats_interval: 120
+    detectors:
+      ov_gpu_1:
+        type: openvino
+        device: CPU
+    model:
+      width: 300
+      height: 300
+      input_tensor: nhwc
+      input_pixel_format: bgr
+      path: /openvino-model/ssdlite_mobilenet_v2.xml
+      labelmap_path: /openvino-model/coco_91cl_bkgr.txt
+
+    objects:
+      track:
+        - person
+
+    detect:
+      # Optional: enables detection for the camera (default: shown below)
+      enabled: True
+
+    record:
+      enabled: True
+      retain:
+        days: 0
+        mode: all
+      alerts:
+        retain:
+          days: 30
+          mode: active_objects
+
+    face_recognition:
+      # Optional: Enable face recognition (default: shown below)
+      enabled: False
+
+    review:
+      # Optional: alerts configuration
+      alerts:
+        # Optional: enables alerts for the camera (default: shown below)
+        enabled: True
+        # Optional: labels that qualify as an alert (default: shown below)
+        labels:
+          - person
+        # Optional: required zones for an object to be marked as an alert (default: none)
+        # NOTE: when settings required zones globally, this zone must exist on all cameras
+        #       or the config will be considered invalid. In that case the required_zones
+        #       should be configured at the camera level.
+        required_zones:
+          - secure_1
+          - secure_2
+      # Optional: detections configuration
+      detections:
+        # Optional: enables detections for the camera (default: shown below)
+        enabled: True
+        # Optional: labels that qualify as a detection (default: all labels that are tracked / listened to)
+        labels:
+          - car
+          - person
+        # Optional: required zones for an object to be marked as a detection (default: none)
+        # NOTE: when settings required zones globally, this zone must exist on all cameras
+        #       or the config will be considered invalid. In that case the required_zones
+        #       should be configured at the camera level.
+        required_zones:
+          - secure_1
+          - secure_2
+
+    cameras:
+      cam_1_name: # <------ Name the camera
+        enabled: true
+        ffmpeg:
+          inputs:
+            - path:
+                rtsp://<username>:<password>@<cam_1_ip>:554/h264/ch1/main/av_stream     # <----- The stream you want to use for detection. Path might be different.
+              roles:
+                - detect
+                - record
+          hwaccel_args: preset-vaapi
+        zones: {}
+      cam_2_name: # <------ Name the camera
+        enabled: true
+        ffmpeg:
+          inputs:
+            - path:
+                rtsp://<username>:<password>@<cam_2_ip>:554/h264/ch1/main/av_stream    # <----- The stream you want to use for detection
+              roles:
+                - detect
+                - record
+          hwaccel_args: preset-vaapi
+        zones: {}
+    version: 0.16-0
+
+      

@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    io.k3s.service: frigate
+  name: frigate
+spec:
+  selector:
+    io.k3s.service: frigate
+  type: NodePort
+  ports:
+    - name: "5000"
+      port: 5000
+      targetPort: 5000
+      nodePort: 30005
+    - name: "1935"
+      port: 1935
+      targetPort: 1935
+      nodePort: 31935
+    - name: "8971"
+      port: 8971
+      targetPort: 8971
+      nodePort: 31798
+    - name: "8554"
+      port: 8554
+      targetPort: 8554
+      nodePort: 30554

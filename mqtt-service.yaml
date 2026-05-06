@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mqtt
+spec:
+  type: NodePort
+  selector:
+    io.k3s.service: mqtt
+  ports:
+    - protocol: TCP
+      port: 1883
+      targetPort: 1883
+      nodePort: 31883

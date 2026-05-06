@@ -1,0 +1,15 @@
+apiVersion: v1
+data:
+  mosquitto.conf: |
+    allow_anonymous false
+    password_file /mosquitto/config/password.txt
+    # MQTT
+    listener 1883 0.0.0.0
+    protocol mqtt
+kind: ConfigMap
+metadata:
+  annotations:
+    use-subpath: "true"
+  labels:
+    io.kompose.service: mqtt
+  name: mqtt-cm0

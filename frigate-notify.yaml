@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frigate-notify
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frigate-notify
+  template:
+    metadata:
+      labels:
+        app: frigate-notify
+    spec:
+      containers:
+        - name: frigate-notify
+          image: ghcr.io/0x2142/frigate-notify:latest # <---- Not a good practice to use "latest" version. But  the frigate-notify community recommends using "latest"
+          imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: "128m"
+              memory: "64Mi"
+          env:
+            - name: TZ
+              value: "Europe/Sofia"
+            - name: FN_FRIGATE__SERVER
+              value: "http://frigate.default.svc.cluster.local:5000" #<------ frigate service
+            - name: FN_FRIGATE__USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: frigate-notify
+                  key: FN_FRIGATE__USERNAME
+            - name: FN_FRIGATE__PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: frigate-notify
+                  key: FN_FRIGATE__PASSWORD
+            - name: FN_FRIGATE__PUBLIC_URL
+              value: "https://192.168.1.2:31798/"
+            - name: FN_FRIGATE__MQTT__ENABLED
+              value: "true"
+            - name: FN_FRIGATE__MQTT__SERVER
+              value: "mqtt.default.svc.cluster.local"
+            - name: FN_FRIGATE__MQTT__PORT
+              value: "1883"
+            - name: FN_FRIGATE__MQTT__USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: frigate-notify
+                  key: FN_FRIGATE__MQTT__USERNAME
+            - name: FN_FRIGATE__MQTT__PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: frigate-notify
+                  key: FN_FRIGATE__MQTT__PASSWORD
+            - name: FN_ALERTS__DISCORD__ENABLED
+              value: "true"
+            - name: FN_ALERTS__DISCORD__WEBHOOK
+              value: <put your discord token here>
